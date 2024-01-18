@@ -31,7 +31,7 @@ pub fn migrate<T: Config>() -> Weight {
 		storage_key_iter::<KittyId, OldKitty, Blake2_128Concat>(module, item).drain()
 	{
         let mut name = [0u8; 8];
-		./[0..4].copy_from_slice(&kitty.name[..4]);
+		[0..4].copy_from_slice(&kitty.name[..4]);
 		let new_kitty = Kitty { dna: kitty.0, name };
 		Kitties::<T>::insert(index, &new_kitty);
 	}
