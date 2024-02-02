@@ -1,6 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use pallet::*;
+pub use weights::WeightInfo;
 
 #[cfg(test)]
 mod mock;
@@ -8,12 +9,19 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+pub mod weights;
+
+
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+
 #[frame_support::pallet]
 pub mod pallet {
     //use core::ops::DispatchFromDyn;
-    use frame_support::pallet_prelude::*;
-    use frame_system::pallet_prelude::*;
+    pub use frame_support::pallet_prelude::*;
+    pub use frame_system::pallet_prelude::*;
     //use sp_std::pallet_prelude::*;
+    use super::WeightInfo;
 
     #[pallet::config]
     pub trait Config: frame_system::Config {
@@ -22,6 +30,8 @@ pub mod pallet {
         type MaxClaimLength: Get<u32>;
         
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+
+        type WeightInfo:WeightInfo;
     }
 
     #[pallet::pallet]
@@ -58,7 +68,7 @@ pub mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         #[pallet::call_index(0)]
-        #[pallet::weight(0)]
+        #[pallet::weight(T::WeightInfo::create_claim(claim.len() as u32))]
         pub fn create_claim(origin: OriginFor<T>, claim: BoundedVec<u8, T::MaxClaimLength>) -> DispatchResultWithPostInfo {
             let sender = ensure_signed(origin)?;
 
@@ -73,7 +83,7 @@ pub mod pallet {
         }
 
         #[pallet::call_index(1)]
-        #[pallet::weight(0)]
+        #[pallet::weight(T::WeightInfo::revoke_claim(claim.len() as u32))]
         pub fn revoke_claim(origin: OriginFor<T>, claim: BoundedVec<u8, T::MaxClaimLength>) -> DispatchResultWithPostInfo {
             let sender = ensure_signed(origin)?;
 
@@ -85,7 +95,7 @@ pub mod pallet {
         }
 
         #[pallet::call_index(2)]
-        #[pallet::weight(0)]
+        #[pallet::weight(T::WeightInfo::transfer_claim(claim.len() as u32))]
         pub fn transfer_claim(origin: OriginFor<T>, claim: BoundedVec<u8, T::MaxClaimLength>, dest: T::AccountId) -> DispatchResultWithPostInfo {
             let sender = ensure_signed(origin)?;
 
